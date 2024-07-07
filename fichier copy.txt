@@ -1,0 +1,107 @@
+package main;
+import java.io.File;
+import java.lang.annotation.Annotation;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.Time;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Vector;
+import java.lang.reflect.*;
+
+import javax.lang.model.element.Name;
+import javax.swing.text.View;
+
+import connect.*;
+import entite.*;
+import gno.*;
+import gno.Names;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+public class Affiche {
+    public static void main(String[] args)throws Exception{
+        Connect connect=new Connect();
+        Connection connection=connect.getConnectionPsql();
+        // Etudiant etudiant=new Etudiant();
+        // etudiant.setIdetudiant(5);
+        // System.out.println(etudiant.readOneByQueryConvenable(connection, "select * from etudiant where nom=\'Li\'").getNom());
+
+        // Etudiant[] etudiants2=etudiant.readByQueryConvenable(connection, "select * from etudiant");
+        // for(int i=0;i<etudiants2.length;i++){
+        //     System.out.println(etudiants2[i].getIdetudiant()+" "+etudiants2[i].getNumero()+"  "+etudiants2[i].getNom()+" "+etudiants2[i].getPrenoms()+" "+etudiants2[i].getNees()+" "+etudiants2[i].getAge());
+        // }
+        // Etudiant etudiant2=new Etudiant(11, 989, "JMama", "PPoopub", Date.valueOf("1993-09-08"), 19, Date.valueOf("2024-02-01"));
+        // //etudiant2.create(connection);
+        // //etudiant2.delete(connection);
+        // etudiant2.update(connection);
+
+         // Chemin du fichier que vous voulez convertir
+         Path filePath = Path.of("./fichier/miradoimage.jpg");
+         // Lecture du fichier en tant que tableau de bytes
+         byte[] fileBytes = Files.readAllBytes(filePath);
+         // Conversion en Base64
+         Photos[] photos=new Photos().read(connection);
+         byte[] bytephotos=photos[0].getPhotocode();
+
+        BufferedImage originalImage = ImageIO.read(new ByteArrayInputStream(bytephotos));
+        String filepath = "./fichier/imagebb.jpg";          
+        // Créez un objet File
+        File outputFile = new File(filepath);
+        // Compression vers une taille cible de 150 Ko
+        byte[] bt=compressAndSave(originalImage, "./fichier/imagebb1.jpg", 150);
+        // Utilisez FileOutputStream pour écrire les bytes dans le fichier
+        try (FileOutputStream fos = new FileOutputStream(outputFile)) {
+            fos.write(bt);
+        }
+        //  Photos photos=new Photos();
+        //  photos.setNomphoto("miradoimage");
+        //  photos.setPhotocode(fileBytes);
+        //  photos.create(connection);
+
+         // Maintenant, 'base64String' contient le fichier en format Base64
+         //System.out.println(base64String);
+        connection.close();
+    }
+
+
+    private static byte[] compressAndSave(BufferedImage image, String outputPath, int targetSizeKb) throws IOException {
+        float compressionQuality = 0.9f; // Valeur initiale de qualité
+
+        // ByteArrayOutputStream pour stocker l'image compressée en mémoire
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        // Réduire la qualité jusqu'à atteindre la taille cible ou une qualité minimale acceptable
+        while (baos.size() > targetSizeKb * 1024 && compressionQuality > 0.01) {
+            baos.reset();
+
+            // Encoder l'image avec une qualité réduite
+            ImageIO.write(image, "jpeg", baos);
+
+            // Réduire la qualité pour la prochaine itération
+            compressionQuality -= 0.5f;
+        }
+        //Sauvegarder l'image compressée sur le disque
+        ImageIO.write(image, "jpeg", new File(outputPath));
+        byte[] compressedImageData = baos.toByteArray();
+        return compressedImageData;
+    }
+
+
+
+
+}
+
